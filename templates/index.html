@@ -4,7 +4,7 @@
 <script src="https://code.jQuery.com/jQuery-1.11.2.js"></script>
 </head>
 <body>
-<h1>{{ title }}</h1>
+<h1>Control page</h1>
 Message: {{ message }}<br>
 Led status: {{ led_status }}<br>
 Thermometer value: {{ thermometer_value }}<br>
@@ -14,8 +14,8 @@ Moisture value: {{ moisture_value }}<br>
 </form>
 Camera snapshot:<br>
 <img src="/static/snapshot.jpg" alt="snapshot" height="200" width="200">
-<form action="/action/take_snapshot">
-<input type="submit" value="Take a snapshot">
+<form action="/">
+<input type="submit" value="refresh">
 </form>
 </body>
 </html>

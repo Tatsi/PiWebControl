@@ -1,6 +1,6 @@
 from flask import Flask, render_template 
 import RPi.GPIO as GPIO 
-import picamera 
+#import picamera 
 import sys
 
 print "Python version" + sys.version
@@ -9,10 +9,10 @@ print "Python version" + sys.version
 app = Flask(__name__)
 
 # Init camera
-try:
-    camera = picamera.PiCamera()
-except:
-    print "Failed to init camera"
+#try:
+    #camera = picamera.PiCamera()
+#except:
+#    print "Failed to init camera"
 
 ################################
 ## Define static variables
@@ -21,9 +21,6 @@ except:
 PIN_THERMOMETER = 2
 PIN_MOISTURE = 3
 PIN_LED = 6
-
-CAMERA_LOCATION = '/dev/video0'
-CAMERA_IMAGE_URL = '/static/snapshot.jpg'
 
 ################################
 ## Init GPIO stuff
@@ -49,7 +46,6 @@ except:
 def index():
     template_data = {
         'title' : 'Login page',
-        'image_url' : CAMERA_IMAGE_URL,
     }
     return render_template('login.html', **template_data)
 
@@ -72,14 +68,14 @@ def pin(action=None):
                 message = 'Led was toggled.'
             except:
                 message = 'Error in toggling led!'
-        elif action == 'take_snapshot':
-            try:
-                camera = picamera.PiCamera()
-                camera.capture('/static/test.jpg')
-                import os
-                os.system('raspistill -o static/snapshot.jpg')
-            except:
-                message = 'Error in taking a snapshot!'
+        #elif action == 'take_snapshot':
+            #try:
+                #camera = picamera.PiCamera()
+                #camera.capture('/static/test.jpg')
+                #import os
+                #os.system('raspistill -o static/snapshot.jpg')
+            #except:
+                #message = 'Error in taking a snapshot!'
 
     # Read values to template data
     try:
@@ -89,13 +85,11 @@ def pin(action=None):
     except:
         message = 'Error in reading pin values.'
 
-    template_data = {                                                           
-        'title' : 'Control page',
+    template_data = {
         'message' : message,
         'led_status' : led_status,
         'thermometer_value' : thermometer_value,
-        'moisture_value' : moisture_value,
-        'camera_image_url' : CAMERA_IMAGE_URL,                                             
+        'moisture_value' : moisture_value,                                             
     }
     return render_template('index.html', **template_data)
 
@@ -103,9 +97,4 @@ def pin(action=None):
 ## Main function
 ###########################
 if __name__ == '__main__':
-    # Init camera
-    #try:
-    #    camera = picamera.PiCamera()
-    #except:
-    #    print "Failed to init camera"
     app.run(debug=True, host='0.0.0.0')
