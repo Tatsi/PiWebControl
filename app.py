@@ -1,13 +1,40 @@
 # Connect DHT11 sensor to Pin 4 of raspberry pi
 
-from flask import Flask, render_template 
+from functools import wraps
+import authdigest
+from flask import Flask, render_template, request, session 
 from dht11 import DHT11Read
 import RPi.GPIO as GPIO 
 #import picamera 
 import time
 import sys
 
+################################
+## Auth
+################################
+class FlaskRealmDigestDB(authdigest.RealmDigestDB):
+    def requires_auth(self, f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            request = flask.request
+            if not self.isAuthenticated(request):
+                return self.challenge()
+            return f(*args, **kwargs)
+        return decorated
+
+authDB = FlaskRealmDigestDB('AuthRealm')
+
+f = open('credentials', 'r')
+user = f.readline().rstrip()
+password = f.readline().rstrip()
+print "User/password: " + user + "/" + password
+f.close()
+authDB.add_user(user, password)
+
+# Disable GPIO warnings
 GPIO.setwarnings(False)
+
+# Print python version
 #print "Python version" + sys.version
 
 # Create app
@@ -52,6 +79,11 @@ def index():
 @app.route('/')
 @app.route("/action/<action>") 
 def pin(action=None):
+    # Auth
+    if not authDB.isAuthenticated(request):
+        return authDB.challenge()
+    session['user'] = request.authorization.username
+    
     # init template data
     message = 'Nothing was done.'
     thermometer_value = 0
@@ -73,15 +105,16 @@ def pin(action=None):
                 #camera.capture('/static/test.jpg')
                 #import os
                 os.system('raspistill -o static/snapshot.jpg')
+                message = 'Took a snapshot!'
             except:
-                #message = 'Error in taking a snapshot!'
+                message = 'Error in taking a snapshot!'
 
     # Read values to template data
     try:
         led_status = GPIO.input(PIN_LED)        
         dht_11_value = None
         while dht_11_value == None:
-            print "Readin DHT11 sensor value from pin 4 failed. Trying again..""
+            print "Reading DHT11 sensor value from pin 4 failed. Trying again.."
             dht_11_value = DHT11Read()
             #time.sleep(3)
         thermometer_value = dht_11_value[1]
@@ -101,4 +134,5 @@ def pin(action=None):
 ## Main function
 ###########################
 if __name__ == '__main__':
+    app.secret_key = 'super secret key'
     app.run(debug=True, host='0.0.0.0')
