@@ -1,9 +1,14 @@
+# Connect DHT11 sensor to Pin 4 of raspberry pi
+
 from flask import Flask, render_template 
+from dht11 import DHT11Read
 import RPi.GPIO as GPIO 
 #import picamera 
+import time
 import sys
 
-print "Python version" + sys.version
+GPIO.setwarnings(False)
+#print "Python version" + sys.version
 
 # Create app
 app = Flask(__name__)
@@ -18,8 +23,6 @@ app = Flask(__name__)
 ## Define static variables
 ################################
 
-PIN_THERMOMETER = 2
-PIN_MOISTURE = 3
 PIN_LED = 6
 
 ################################
@@ -28,9 +31,6 @@ PIN_LED = 6
 
 try:
     GPIO.setmode(GPIO.BCM)
-
-    GPIO.setup(PIN_THERMOMETER, GPIO.IN)
-    GPIO.setup(PIN_MOISTURE, GPIO.IN)
 
     GPIO.setup(PIN_LED, GPIO.OUT)
     GPIO.output(PIN_LED, False)
@@ -48,7 +48,6 @@ def index():
         'title' : 'Login page',
     }
     return render_template('login.html', **template_data)
-
 
 @app.route('/')
 @app.route("/action/<action>") 
@@ -68,20 +67,25 @@ def pin(action=None):
                 message = 'Led was toggled.'
             except:
                 message = 'Error in toggling led!'
-        #elif action == 'take_snapshot':
-            #try:
+        elif action == 'take_snapshot':
+            try:
                 #camera = picamera.PiCamera()
                 #camera.capture('/static/test.jpg')
                 #import os
-                #os.system('raspistill -o static/snapshot.jpg')
-            #except:
+                os.system('raspistill -o static/snapshot.jpg')
+            except:
                 #message = 'Error in taking a snapshot!'
 
     # Read values to template data
     try:
-        thermometer_value = GPIO.input(PIN_THERMOMETER)
-        moisture_value = GPIO.input(PIN_MOISTURE)
-        led_status = GPIO.input(PIN_LED)
+        led_status = GPIO.input(PIN_LED)        
+        dht_11_value = None
+        while dht_11_value == None:
+            print "Readin DHT11 sensor value from pin 4 failed. Trying again..""
+            dht_11_value = DHT11Read()
+            #time.sleep(3)
+        thermometer_value = dht_11_value[1]
+        moisture_value = dht_11_value[0]
     except:
         message = 'Error in reading pin values.'
 
